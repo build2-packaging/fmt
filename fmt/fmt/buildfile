@@ -6,14 +6,22 @@ imp_libs = # Implementation dependencies.
 
 lib{fmt}: include/hxx{**} hxx{version} $imp_libs $int_libs
 
-lib{fmt}: src/mxx{fmt} : include = ($config.fmt.enable_modules) # `fmt` C++ module only
-lib{fmt}: src/cxx{** -fmt} : include = (!$config.fmt.enable_modules) # no modules only
+# Automatically build as module if the feature is enabled
+build_fmt_module = $cxx.features.modules
+allow_header_usage = ($build_fmt_module == false || $config.fmt.modules_only == false)
+
+if($build_fmt_module && $allow_header_usage)
+  info "Building fmt with dual module/header mode enabled"
+
+lib{fmt}: src/mxx{fmt} : include = ($build_fmt_module) # `fmt` C++ module only
+lib{fmt}: src/cxx{** -fmt} : include = (!$build_fmt_module) # no modules only
 
 # Meta data for users
 lib{fmt}:
 {
   export.metadata = 1 fmt
-  fmt.is_module = [bool] $config.fmt.enable_modules
+  fmt.has_header = [bool] $allow_header_usage
+  fmt.has_module = [bool] $build_fmt_module
 }
 
 # Include the generated version header into the distribution (so that we don't
@@ -31,21 +39,27 @@ hxx{version} : in{version} $src_root/manifest
 # Build options.
 #
 cxx.poptions =+ "-I$src_base/include" "-I$out_root" "-I$src_root"
-objs{*}: cxx.poptions += -DFMT_LIB_EXPORT
+{objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
 
-if($config.fmt.enable_modules)
-  cxx.poptions =+ -DFMT_MODULE=ON
+# If building fmt module, also enable attaching to the global module in order to allow concurrent #include and import.
+if($build_fmt_module)
+{
+  cxx.poptions =+ -DFMT_MODULE
+  if($allow_header_usage)
+    # Support mixing consuming as both modules and headers within a single build
+    cxx.poptions =+ -DFMT_ATTACH_TO_GLOBAL_MODULE
+  if($config.fmt.enable_import_std)
+    cxx.poptions =+ -DFMT_IMPORT_STD
+}
 
 # Export options.
 #
-lib{fmt}:
+lib{fmt}: cxx.export.libs = $int_libs
+if($allow_header_usage) # Note: exported poptions only relevant for header consumption
 {
-  cxx.export.poptions = "-I$src_base/include" "-I$out_root" "-I$src_root"
-  cxx.export.libs = $int_libs
+  lib{fmt}: cxx.export.poptions = "-I$src_base/include" "-I$out_root" "-I$src_root"
+  libs{fmt}: cxx.export.poptions += -DFMT_SHARED
 }
-
-libs{fmt}: cxx.export.poptions += -DFMT_SHARED
-
 
 # For pre-releases use the complete version to make sure they cannot be used
 # in place of another pre-release or the final version. See the version module
