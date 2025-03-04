@@ -44,7 +44,6 @@ cxx.poptions =+ "-I$src_base/include" "-I$out_root"
 # If building fmt module, also enable attaching to the global module in order to allow concurrent #include and import.
 if($build_fmt_module)
 {
-  cxx.poptions =+ -DFMT_MODULE
   if($allow_header_usage)
     # Support mixing consuming as both modules and headers within a single build
     cxx.poptions =+ -DFMT_ATTACH_TO_GLOBAL_MODULE
