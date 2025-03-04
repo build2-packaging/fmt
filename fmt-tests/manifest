@@ -1,6 +1,6 @@
 : 1
 name: fmt-tests
-version: 11.0.3-a.0.z
+version: 11.0.2
 project: fmt
 summary: Tests package for fmt upstream tests
 license: MIT
