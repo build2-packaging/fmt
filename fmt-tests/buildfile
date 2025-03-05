@@ -1,7 +1,7 @@
 ./: manifest
 
 # NOTE: for the moment, we need to disable all the test targets in modules-only mode, since upstream fmt does not yet properly support it.
-import! [metadata] fmt_lib = fmt%lib{fmt}
+import! [metadata, rule_hint=cxx.link] fmt_lib = fmt%lib{fmt}
 [bool] fmt_headers_available = $($fmt_lib: fmt.has_header)
 
 ./: basics/: include = $fmt_headers_available
