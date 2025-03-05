@@ -53,10 +53,18 @@ if($build_fmt_module)
 
 # Export options.
 #
-if($allow_header_usage) # Note: exported poptions only relevant for header consumption
+if($allow_header_usage)
 {
+  # Note: these poptions only relevant for header consumption
   lib{fmt}: cxx.export.poptions = "-I$src_base/include" "-I$out_root"
-  libs{fmt}: cxx.export.poptions += -DFMT_SHARED
+
+  if($build_fmt_module)
+  {
+    # For consumer-built BMI compatibility, this must be exported
+    lib{fmt}: cxx.export.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
+  }
+
+  libs{fmt}: cxx.export.poptions += -DFMT_SHARED 
 }
 
 # For pre-releases use the complete version to make sure they cannot be used
