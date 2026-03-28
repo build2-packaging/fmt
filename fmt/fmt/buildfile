@@ -32,9 +32,11 @@ src/
 
 lib{fmt}: src/hxx{config} src/mxx{fmt}: include = $cxx.features.modules
 
-# Workaround for MSVC bug: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
-# if($build_fmt_module && $cxx.class == 'msvc')
-#   cc.reprocess = true
+# Workaround for MSVC Bug
+# See: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
+#
+if($cxx.features.modules && $cxx.class == 'msvc')
+  cc.reprocess = true
 
 # Build Options
 #
