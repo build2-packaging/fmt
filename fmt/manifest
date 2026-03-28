@@ -21,12 +21,6 @@ tests: fmt-tests == $
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 
-builds: default
-build-exclude: linux_debian_12-clang_17		; clang-17 bug with libstdc++ std::tuple (https://github.com/llvm/llvm-project/issues/61415)
-build-exclude: **/x86_64-w64-mingw32		; unknown error building installed tests 'error: unable to stat path D:\a\msys64\mingw64\lib\x86_64-w64-mingw32\14.1.0\pkgconfig\: the device is not ready'
+module-build-config: config.cxx.features.modules=true
 
-# Modules support still not sufficient to enable on CI
-modules-builds: linux : &( +clang-18+ ) ; Modules builds only supported for latest Clang and MSVC
-modules-build-config: config.cxx.features.modules=true ; Enable c++20 modules
-modules-only-builds: linux : &( +clang-18+ ) ; Modules builds only supported for latest Clang and MSVC
-modules-only-build-config: config.cxx.features.modules=true config.fmt.modules_only=true ; Enable c++20 modules and disable header usage
+module-only-build-config: config.cxx.features.modules=true config.fmt.module_only=true
