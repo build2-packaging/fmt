@@ -10,59 +10,67 @@ lib{fmt}: src/$src_type{** -fmt}
 
 # Module
 #
+# To successfully generate a Binary Module Interface (BMI) after installation,
+# the consumer must compile the module interface unit with the same macro
+# configuration used during the library's original build.
+# Since these macros are only required by the module itself, they should not be
+# exported to the consumer's preprocessor scope via 'cxx.export.poptions'.
+# To bridge this gap, we generate a persistent 'config.h' that encapsulates the
+# package configuration. We then patch the module interface unit to include this
+# header within the Global Module Fragment, ensuring the macros are available
+# during BMI generation without leaking into the consumer's translation units.
+#
+lib{fmt}: src/hxx{config} src/mxx{fmt}: include = $cxx.features.modules
+
 src/
 {
+  # Place the header include immediately after 'module;' to ensure all
+  # relevant macros are available before any other macro preprocessing.
+  #
   mxx{fmt}: file{fmt.cc}
   {{
+    diag patch $< -> $>
     sed -e 's/^module;/module;\n#include "config.h"/' $path($<) >$path($>)
   }}
 
+  # The config header needs to define all macros that were required
+  # to compile the module interface unit during the installation.
+  #
   hxx{config}: ../file{config.h.in}
   {{
-    diag conf $< -> $>
+    diag config $< -> $>
     cp $path($<) $path($>)
     if! $config.fmt.module_only
-      echo "#define FMT_ATTACH_TO_GLOBAL_MODULE" >+$path($>)
+      echo '#define FMT_ATTACH_TO_GLOBAL_MODULE' >+$path($>)
     end
     if! $config.fmt.disable_import_std
-      echo "#define FMT_IMPORT_STD" >+$path($>)
+      echo '#define FMT_IMPORT_STD' >+$path($>)
     end
   }}
 }
 
-lib{fmt}: src/hxx{config} src/mxx{fmt}: include = $cxx.features.modules
-
-# Workaround for MSVC Bug
-# See: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
+# Build and Export Options
 #
-if($cxx.features.modules && $cxx.class == 'msvc')
-  cc.reprocess = true
+cxx.poptions =+ "-I$out_base/src" "-I$src_base/src" "-I$src_base/include"
 
-# Build Options
-#
-cxx.poptions =+ "-I$src_base/include" "-I$out_base/src" "-I$src_base/src"
-
-{objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
-
-# if $cxx.features.modules
-# {
-#   cxx.poptions =+ "-I$src_base/src"
-#   if! $config.fmt.module_only
-#     cxx.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
-#   if! $config.fmt.disable_import_std
-#     cxx.poptions += -DFMT_IMPORT_STD
-# }
-
-# Export Options
-#
 if! $config.fmt.module_only
   lib{fmt}: cxx.export.poptions = "-I$src_base/include"
+
+{objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
 libs{fmt}: cxx.export.poptions += -DFMT_SHARED
 
 if ($cxx.class == 'msvc')
 {
+  # UTF-8 must be explicitly enabled for MSVC.
+  #
   cxx.poptions += /utf-8
   lib{fmt}: cxx.export.poptions += /utf-8
+
+  # Workaround for MSVC Bug
+  # See: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
+  #
+  if $cxx.features.modules
+    cc.reprocess = true
 }
 
 # Metadata
