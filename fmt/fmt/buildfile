@@ -1,28 +1,26 @@
-./ : lib{fmt}
-
+# Headers
+#
 lib{fmt}: include/hxx{**} hxx{version}
 
-# Automatically build as module if the feature is enabled
-build_fmt_module = $cxx.features.modules
-allow_header_usage = ($build_fmt_module == false || $config.fmt.modules_only == false)
+# Sources
+#
+src_type = ($cxx.features.modules ? ixx : cxx)
+lib{fmt}: src/$src_type{** -fmt}
 
-if($build_fmt_module && $allow_header_usage)
-  info "Building fmt with dual module/header mode enabled"
+# Module
+#
+lib{fmt}: src/mxx{fmt} : include = $cxx.features.modules
+
+# Automatically build as module if the feature is enabled
+# build_fmt_module = $cxx.features.modules
+# allow_header_usage = ($build_fmt_module == false || $config.fmt.modules_only == false)
+
+# if($build_fmt_module && $allow_header_usage)
+#   info "Building fmt with dual module/header mode enabled"
 
 # Workaround for MSVC bug: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
-if($build_fmt_module && $cxx.class == 'msvc')
-  cc.reprocess = true
-
-lib{fmt}: src/mxx{fmt} : include = ($build_fmt_module) # `fmt` C++ module only
-lib{fmt}: src/cxx{** -fmt} : include = (!$build_fmt_module) # no modules only
-
-# Meta data for users
-lib{fmt}:
-{
-  export.metadata = 1 fmt
-  fmt.has_header = [bool] $allow_header_usage
-  fmt.has_module = [bool] $build_fmt_module
-}
+# if($build_fmt_module && $cxx.class == 'msvc')
+#   cc.reprocess = true
 
 # Include the generated version header into the distribution (so that we don't
 # pick up an installed one) and don't remove it when cleaning in src (so that
@@ -42,29 +40,42 @@ cxx.poptions =+ "-I$src_base/include" "-I$out_root"
 {objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
 
 # If building fmt module, also enable attaching to the global module in order to allow concurrent #include and import.
-if($build_fmt_module)
+if $cxx.features.modules
 {
-  if($allow_header_usage)
-    # Support mixing consuming as both modules and headers within a single build
-    cxx.poptions =+ -DFMT_ATTACH_TO_GLOBAL_MODULE
-  if($config.fmt.enable_import_std)
-    cxx.poptions =+ -DFMT_IMPORT_STD
+  cxx.poptions =+ "-I$src_base/src"
+  if! $config.fmt.module_only
+    cxx.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
+  if! $config.fmt.disable_import_std
+    cxx.poptions += -DFMT_IMPORT_STD
 }
 
 # Export options.
 #
-if($allow_header_usage)
+if! $config.fmt.module_only
 {
   # Note: these poptions only relevant for header consumption
   lib{fmt}: cxx.export.poptions = "-I$src_base/include" "-I$out_root"
 
-  if($build_fmt_module)
-  {
-    # For consumer-built BMI compatibility, this must be exported
-    lib{fmt}: cxx.export.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
-  }
+  # For consumer-built BMI compatibility, this must be exported
+  # if($build_fmt_module)
+  #   lib{fmt}: cxx.export.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
 
   libs{fmt}: cxx.export.poptions += -DFMT_SHARED 
+}
+
+if ($cxx.class == 'msvc')
+{
+  cxx.poptions += /utf-8
+  lib{fmt}: cxx.export.poptions += /utf-8
+}
+
+# Metadata
+#
+lib{fmt}:
+{
+  export.metadata = 1 fmt
+  fmt.has_header = [bool] (!$config.fmt.module_only)
+  fmt.has_module = [bool] $cxx.features.modules
 }
 
 # For pre-releases use the complete version to make sure they cannot be used
@@ -76,14 +87,16 @@ if $version.pre_release
 else
   lib{fmt}: bin.lib.version = @"-$version.major.$version.minor"
 
-# Install into the fmt/ subdirectory of, say, /usr/include/
-# recreating subdirectories.
+# Installation
 #
-include/
+include/hxx{*}:
 {
-  {hxx ixx txx}{*}:
-  {
-    install         = include/
-    install.subdirs = true
-  }
+  install         = include/
+  install.subdirs = true
+}
+
+src/{mxx ixx}{*}:
+{
+  install         = include/fmt/
+  install.subdirs = true
 }
