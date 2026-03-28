@@ -1,14 +1,20 @@
 : 1
 name: fmt-tests
 version: 12.1.0-a.0.z
+type: exe
+language: c++
 project: fmt
-summary: Tests package for fmt upstream tests
+summary: Formatting C++ library tests
 license: MIT
 
 description-file: README.md
 changes-file: ChangeLog.md
-url: https://github.com/fmtlib/fmt/
-doc-url: https://fmt.dev/
+url: https://fmt.dev/
+src-url: https://github.com/fmtlib/fmt/
+email: victor.zverovich@gmail.com
+
+package-url: https://github.com/build2-packaging/fmt/
+package-email: packaging@build2.org
 
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0

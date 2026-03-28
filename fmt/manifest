@@ -1,16 +1,20 @@
 : 1
 name: fmt
 version: 12.1.0-a.0.z
-summary: "{fmt} is an open-source formatting library for C++. It can be used as a safe and fast alternative to (s)printf and iostreams."
+type: lib
+language: c++
+project: fmt
+summary: Formatting C++ library used as alternative to (s)printf and iostreams
 license: MIT
 
 description-file: README.md
 changes-file: ChangeLog.md
-doc-url: https://fmt.dev/
-url: https://github.com/fmtlib/fmt/
+url: https://fmt.dev/
+src-url: https://github.com/fmtlib/fmt/
+email: victor.zverovich@gmail.com
 
 package-url: https://github.com/build2-packaging/fmt/
-package-email: mjklaim@gmail.com
+package-email: packaging@build2.org
 
 tests: fmt-tests == $
 
