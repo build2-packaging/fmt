@@ -18,6 +18,8 @@
 #
 #*.png binary
 
+# See: https://build2.org/article/symlinks.xhtml#windows
+#
 fmt/fmt/include symlink=dir
 fmt/fmt/src symlink=dir
 fmt/doc symlink=dir

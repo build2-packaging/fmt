@@ -1,26 +1,52 @@
-.bdep/
-.vs/
-
-# Local default options files.
+# Use whitelisting and ignore everything by default.
 #
-.build2/local/
+*
 
-# Compiler/linker output.
+# Don't ignore directories.
 #
-*.d
-*.t
-*.i
-*.ii
-*.o
-*.obj
-*.so
-*.dll
-*.a
-*.lib
-*.exp
-*.pdb
-*.ilk
-*.exe
-*.exe.dlls/
-*.exe.manifest
-*.pc
+!*/
+
+# Don't ignore Git-specific files.
+#
+!.git*
+
+# Allow all files from upstream sources.
+#
+!upstream
+
+# Don't ignore license and documentation files.
+#
+!*.md
+!LICENSE
+
+# Don't ignore default C++ file extensions.
+#
+!*.h
+!*.c
+!*.cc
+!*.inl
+
+# Don't ignore source generation files.
+#
+!*.in
+
+# Add original source files that might have been changed.
+#
+!*.orig
+
+# Don't ignore standard build2 files.
+#
+!buildfile
+!bootstrap.build
+!export.build
+!root.build
+!*manifest
+!*testscript
+
+# Allow specific symbolic links to directories.
+#
+!fmt/fmt/include
+!fmt/fmt/src
+!fmt/doc
+!fmt-tests/basics/test
+!fmt-tests/test-main/test
