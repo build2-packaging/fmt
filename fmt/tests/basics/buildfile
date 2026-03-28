@@ -3,9 +3,5 @@ import! [metadata, rule_hint=cxx.link] libs = fmt%lib{fmt}
 ./ : exe{driver} : include = $($libs: fmt.has_header)
 ./ : exe{driver-modules} : include = $($libs: fmt.has_module)
 
-exe{driver} : {cxx}{driver} hxx{tests.inl} $libs testscript{**}
-
-# For purposes of verifying that fmt headers are not made available for include when in modules-only mode
-cxx.poptions =+ "-DFMT_BUILD2_HAS_HEADER=($($libs: fmt.has_header) ? 1 : 0)"
-
-exe{driver-modules} : {cxx}{driver-modules} hxx{tests.inl} $libs testscript{**}
+exe{driver} : cxx{driver} ixx{tests} $libs
+exe{driver-modules} : cxx{driver-modules} ixx{tests} $libs

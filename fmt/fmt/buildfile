@@ -1,6 +1,7 @@
 # Headers
 #
-lib{fmt}: include/hxx{**}
+hdr_type = ($config.fmt.module_only ? ixx : hxx)
+lib{fmt}: include/$hdr_type{**.h}
 
 # Sources
 #
@@ -11,23 +12,16 @@ lib{fmt}: src/$src_type{** -fmt}
 #
 lib{fmt}: src/mxx{fmt} : include = $cxx.features.modules
 
-# Automatically build as module if the feature is enabled
-# build_fmt_module = $cxx.features.modules
-# allow_header_usage = ($build_fmt_module == false || $config.fmt.modules_only == false)
-
-# if($build_fmt_module && $allow_header_usage)
-#   info "Building fmt with dual module/header mode enabled"
-
 # Workaround for MSVC bug: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
 # if($build_fmt_module && $cxx.class == 'msvc')
 #   cc.reprocess = true
 
-# Build options.
+# Build Options
 #
-cxx.poptions =+ "-I$src_base/include" "-I$out_root"
+cxx.poptions =+ "-I$src_base/include"
+
 {objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
 
-# If building fmt module, also enable attaching to the global module in order to allow concurrent #include and import.
 if $cxx.features.modules
 {
   cxx.poptions =+ "-I$src_base/src"
@@ -37,17 +31,11 @@ if $cxx.features.modules
     cxx.poptions += -DFMT_IMPORT_STD
 }
 
-# Export options.
+# Export Options
 #
 if! $config.fmt.module_only
 {
-  # Note: these poptions only relevant for header consumption
-  lib{fmt}: cxx.export.poptions = "-I$src_base/include" "-I$out_root"
-
-  # For consumer-built BMI compatibility, this must be exported
-  # if($build_fmt_module)
-  #   lib{fmt}: cxx.export.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
-
+  lib{fmt}: cxx.export.poptions = "-I$src_base/include"
   libs{fmt}: cxx.export.poptions += -DFMT_SHARED 
 }
 
@@ -77,14 +65,17 @@ else
 
 # Installation
 #
-include/hxx{*}:
+if! $config.fmt.module_only
+  lib{fmt}: cxx.pkgconfig.include = include/fmtlib/
+
+include/{hxx ixx}{*}:
 {
-  install         = include/
+  install         = include/fmtlib/
   install.subdirs = true
 }
 
 src/{mxx ixx}{*}:
 {
-  install         = include/fmt/
+  install         = include/fmtlib/
   install.subdirs = true
 }
