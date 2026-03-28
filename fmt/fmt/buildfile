@@ -10,7 +10,27 @@ lib{fmt}: src/$src_type{** -fmt}
 
 # Module
 #
-lib{fmt}: src/mxx{fmt} : include = $cxx.features.modules
+src/
+{
+  mxx{fmt}: file{fmt.cc}
+  {{
+    sed -e 's/^module;/module;\n#include "config.h"/' $path($<) >$path($>)
+  }}
+
+  hxx{config}: ../file{config.h.in}
+  {{
+    diag conf $< -> $>
+    cp $path($<) $path($>)
+    if! $config.fmt.module_only
+      echo "#define FMT_ATTACH_TO_GLOBAL_MODULE" >+$path($>)
+    end
+    if! $config.fmt.disable_import_std
+      echo "#define FMT_IMPORT_STD" >+$path($>)
+    end
+  }}
+}
+
+lib{fmt}: src/hxx{config} src/mxx{fmt}: include = $cxx.features.modules
 
 # Workaround for MSVC bug: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
 # if($build_fmt_module && $cxx.class == 'msvc')
@@ -18,26 +38,24 @@ lib{fmt}: src/mxx{fmt} : include = $cxx.features.modules
 
 # Build Options
 #
-cxx.poptions =+ "-I$src_base/include"
+cxx.poptions =+ "-I$src_base/include" "-I$out_base/src" "-I$src_base/src"
 
 {objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
 
-if $cxx.features.modules
-{
-  cxx.poptions =+ "-I$src_base/src"
-  if! $config.fmt.module_only
-    cxx.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
-  if! $config.fmt.disable_import_std
-    cxx.poptions += -DFMT_IMPORT_STD
-}
+# if $cxx.features.modules
+# {
+#   cxx.poptions =+ "-I$src_base/src"
+#   if! $config.fmt.module_only
+#     cxx.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
+#   if! $config.fmt.disable_import_std
+#     cxx.poptions += -DFMT_IMPORT_STD
+# }
 
 # Export Options
 #
 if! $config.fmt.module_only
-{
   lib{fmt}: cxx.export.poptions = "-I$src_base/include"
-  libs{fmt}: cxx.export.poptions += -DFMT_SHARED 
-}
+libs{fmt}: cxx.export.poptions += -DFMT_SHARED
 
 if ($cxx.class == 'msvc')
 {
@@ -74,7 +92,7 @@ include/{hxx ixx}{*}:
   install.subdirs = true
 }
 
-src/{mxx ixx}{*}:
+src/{hxx mxx ixx}{*}:
 {
   install         = include/fmtlib/
   install.subdirs = true

@@ -14,7 +14,7 @@ using cxx
 hxx{*}: extension = h
 ixx{*}: extension = cc
 cxx{*}: extension = cc
-mxx{*}: extension = cc
+mxx{*}: extension = ccm
 
 # The test target for cross-testing (running tests under Wine, etc).
 #

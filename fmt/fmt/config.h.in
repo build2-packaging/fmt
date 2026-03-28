@@ -1,0 +1,3 @@
+#ifdef FMT_SHARED
+#  define FMT_LIB_EXPORT
+#endif
