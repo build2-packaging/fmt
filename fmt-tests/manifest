@@ -4,7 +4,11 @@ version: 12.1.0-a.0.z
 project: fmt
 summary: Tests package for fmt upstream tests
 license: MIT
+
+description-file: README.md
+changes-file: ChangeLog.md
 url: https://github.com/fmtlib/fmt/
+doc-url: https://fmt.dev/
 
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0

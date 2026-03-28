@@ -1,4 +1,4 @@
-./: manifest
+./: manifest legal{LICENSE} doc{*.md}
 
 # NOTE: for the moment, we need to disable all the test targets in modules-only mode, since upstream fmt does not yet properly support it.
 import! [metadata, rule_hint=cxx.link] fmt_lib = fmt%lib{fmt}

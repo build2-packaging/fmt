@@ -1,5 +1,5 @@
-./: {*/ -build/ -upstream/ -doc/} manifest doc{README.md} doc/doc{**}
+./: fmt/ manifest legal{LICENSE} doc{*.md} doc/doc{**}
 
 # Don't install tests.
 #
-tests/: install = false
+./: tests/: install = false
