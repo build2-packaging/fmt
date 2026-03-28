@@ -21,6 +21,19 @@ tests: fmt-tests == $
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 
-module-build-config: config.cxx.features.modules=true
+module-builds: default experimental : &( +gcc-15+ +clang-19+ +msvc )
+module-build-config:
+\
+config.cxx.features.modules=true
+;
+Enable support for both the {fmt} headers and its C++ module.
+\
 
-module-only-build-config: config.cxx.features.modules=true config.fmt.module_only=true
+module-only-builds: default experimental : &( +gcc-15+ +clang-19+ +msvc )
+module-only-build-config:
+\
+config.cxx.features.modules=true
+config.fmt.module_only=true
+;
+Only use the {fmt} C++ module.
+\
