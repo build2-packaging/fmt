@@ -36,18 +36,15 @@ gtest_test_names =      \
 # TODO: scan-test - Excluded due to unresolved linker errors.
 
 for test_name : $gtest_test_names
-{
-  ./: exe{$test_name} : test/cxx{$test_name}
-  exe{$test_name}: libue{test-main}: bin.whole = false
-}
+  ./: exe{$test_name} : test/cxx{$test_name} libue{test-main} testscript
 
 # END [Tests that use gtest, and do not require any additional source/headers beyond a single cc file]
 
 
 # Tests using gtest but with additional prerequisites
 
-./: exe{ranges-test} : test/cxx{ranges-test ranges-odr-test}
-exe{ranges-test}: libue{test-main}: bin.whole = false
+./: exe{ranges-test} : \
+  test/cxx{ranges-test ranges-odr-test} libue{test-main} testscript
 
 # NOTE: format-impl-test- For whatever reason, format-impl-test is tied in upstream to header-only-test, which we do not support. Attempting to compile it alone yields errors, therefore omitted.
 # TODO: posix-mock-test - Excluded pending further work. Needs posix-mock.h, and has some msvc/runtime conditional logic that needs looking into.
@@ -65,7 +62,7 @@ import fmt = fmt%lib{fmt}
 
 for test_name : $standalone_test_names
 {
-  ./: exe{$test_name} : test/cxx{$test_name} $fmt
+  ./: exe{$test_name} : test/cxx{$test_name} $fmt testscript
 }
 
 # END [Tests which do not use gtest and therefore should link directly to fmt only and not the test-main lib]
