@@ -1,8 +1,13 @@
 # Configuration Variables
 
-#
+# Disable access to `lib{fmt}`'s headers to encapsulate
+# all entities in {fmt}'s C++ module with module linkage.
 #
 config [bool] config.fmt.module_only ?= false
+
+# Disable the use of `import std;` in the
+# {fmt}'s C++ module for backwards compatibility.
+#
 config [bool] config.fmt.disable_import_std ?= false
 
 # C++ Configuration

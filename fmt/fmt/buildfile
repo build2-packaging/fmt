@@ -1,9 +1,28 @@
-# Headers
+# In a modular build, {fmt} incorporates all headers and sources into its
+# module interface unit. We dynamically retype their target types as
+# implementation fragments (`ixx{}`) to reflect their role as internal
+# module details. While other strategies exist to achieve this, changing
+# the target types provides the clearest communication of intent.
+
+# Headers:
+# In module-only mode, headers are no longer public interface points;
+# they become internal module details. Retyping to `ixx` enforces this
+# encapsulation and signals that direct header access is discouraged.
+#
+# Note:
+# In non-modular, compiled builds, `fmt/format-inl.h` acts as a private
+# implementation header for `src/format.cc`. While its installation is
+# technically unnecessary in this specific configuration, we do not
+# explicitly exclude it to avoid complicating the installation logic.
 #
 hdr_type = ($config.fmt.module_only ? ixx : hxx)
 lib{fmt}: include/$hdr_type{**.h}
 
-# Sources
+# Sources:
+# With {fmt}'s module, sources are no longer compiled as translation units.
+# However, they must remain visible to the consumer's compiler to be read and
+# processed during module importation. Using `ixx`, ensures these files are
+# properly installed as source text rather than compiled into object files.
 #
 src_type = ($cxx.features.modules ? ixx : cxx)
 lib{fmt}: src/$src_type{** -fmt}
@@ -94,6 +113,14 @@ else
   lib{fmt}: bin.lib.version = @"-$version.major.$version.minor"
 
 # Installation
+#
+# To support post-installation usage for the C++ modules, we isolate
+# the library's components within a dedicated 'fmtlib/' subdirectory.
+# Headers are installed into 'fmtlib/fmt/' to satisfy {fmt}'s internal
+# inclusion scheme, e.g., #include "fmt/core.h". The module interface unit,
+# its configuration headers, and the implementation sources reside at the
+# 'fmtlib/' root. To ensure the compiler resolves header paths correctly,
+# we point the pkg-config include path to 'include/fmtlib/'.
 #
 if! $config.fmt.module_only
   lib{fmt}: cxx.pkgconfig.include = include/fmtlib/
