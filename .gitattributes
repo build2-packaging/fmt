@@ -24,4 +24,3 @@ fmt/fmt/include symlink=dir
 fmt/fmt/src symlink=dir
 fmt/doc symlink=dir
 fmt-tests/basics/test symlink=dir
-fmt-tests/test-main/test symlink=dir
