@@ -67,6 +67,8 @@ if ($cxx.class == 'msvc')
   lib{fmt}: cxx.export.poptions += /utf-8
 
   # Workaround for MSVC Bug
+  # Otherwise, MSVC emits error C7657 (private module fragment cannot
+  # be declared before a module declaration) when processing the module.
   # See: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
   #
   if $cxx.features.modules
