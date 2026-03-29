@@ -13,6 +13,7 @@ url: https://fmt.dev/
 src-url: https://github.com/fmtlib/fmt/
 email: victor.zverovich@gmail.com
 
+package-description-file: PACKAGE-README.md
 package-url: https://github.com/build2-packaging/fmt/
 package-email: packaging@build2.org
 
