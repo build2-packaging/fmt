@@ -77,11 +77,6 @@ libs{fmt}: cxx.export.poptions += -DFMT_SHARED
 
 if ($cxx.class == 'msvc')
 {
-  # UTF-8 must be explicitly enabled for MSVC.
-  #
-  cxx.poptions += /utf-8
-  lib{fmt}: cxx.export.poptions += /utf-8
-
   # Workaround for MSVC Bug
   # Otherwise, MSVC emits error C7657 (private module fragment cannot
   # be declared before a module declaration) when processing the module.
