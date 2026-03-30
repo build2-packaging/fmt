@@ -4,7 +4,9 @@
 
 // Use `import std;` if the compiler supports it.
 #if defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
-#  define FMT_IMPORT_STD
+#  if !defined(__FreeBSD__)
+#    define FMT_IMPORT_STD
+#  endif
 #endif
 
 #ifdef FMT_SHARED
