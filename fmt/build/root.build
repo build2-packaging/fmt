@@ -5,11 +5,6 @@
 #
 config [bool] config.fmt.module_only ?= false
 
-# Disable the use of `import std;` in the
-# {fmt}'s C++ module for backwards compatibility.
-#
-config [bool] config.fmt.disable_import_std ?= false
-
 # C++ Configuration
 #
 cxx.std = latest

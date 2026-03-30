@@ -62,9 +62,6 @@ src/
     if! $config.fmt.module_only
       echo '#define FMT_ATTACH_TO_GLOBAL_MODULE' >+$path($>)
     end
-    if! $config.fmt.disable_import_std
-      echo '#define FMT_IMPORT_STD' >+$path($>)
-    end
   }}
 }
 
