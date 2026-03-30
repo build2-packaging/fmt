@@ -1,4 +1,3 @@
-#include <cassert>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -9,5 +8,8 @@
 #include <fmt/format.h>
 #include <fmt/printf.h>
 #include <fmt/ranges.h>
+
+#undef NDEBUG
+#include <cassert>
 
 #include "tests.inl"
