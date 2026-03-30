@@ -50,12 +50,17 @@ import fmt;
 ## Configuration
 
 ### C++20 Modules Support
-{fmt}'s C++ module can be enabled with `config.cxx.features.modules=true`.
-In this case, the library by default can be consumed via module importation through `import fmt;` and header inclusion through, eg., `#include <fmt/format.h>`.
-For this to work, all entities are attached to the global module via global module linkage through `extern "C++"`.
+{fmt}'s C++ module support can be enabled by setting:
 
-To make entities use module linkage, we must disable header access by using `config.fmt.module_only=true`.
-In this case, all entities are fully encapsulated in {fmt}'s C++ module.
+    config.cxx.features.modules = true
 
-{fmt}'s C++ module uses importation of the C++ standard library module via `import std;` by default.
-For backwards compatibility, this can be disabled by `config.fmt.disable_import_std=true`.
+By default, the library supports both module import through `import fmt;` and traditional header inclusion through, eg., `#include <fmt/format.h>`.
+To enable this dual usage, all entities are attached to the global module via global module linkage (`extern "C++"`).
+This ensures compatibility between module and header-based consumption.
+
+To enforce strict module usage, use:
+
+    config.fmt.module_only = true
+
+In this mode, header access is disabled and all entities are exclusively provided through the C++ module.
+This results in full encapsulation within the module and avoids global module linkage.

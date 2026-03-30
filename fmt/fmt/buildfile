@@ -1,4 +1,4 @@
-# In a modular build, {fmt} incorporates all headers and sources into its
+# Using C++ modules, {fmt} incorporates all headers and sources into its
 # module interface unit. We dynamically retype their target types as
 # implementation fragments (`ixx{}`) to reflect their role as internal
 # module details. While other strategies exist to achieve this, changing

@@ -44,9 +44,13 @@ Inside the repository's directory, initialize your build configuration.
 Afterwards, use `b` or `bdep` to build, test, install, and distribute the packages.
 
 ## Issues and Notes
-- Modules support is WIP, both in the `build2` package and also in `fmt` upstream. Latest versions of MSVC or Clang are recommended.
-- Upstream's unit tests only support C++20 and fail for the latest C++ standard. As such, `cxx.std = 20` for the `fmt-tests` package.
-- A [bug in MSVC](https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183) prevents successful processing of {fmt}'s C++ module and emits error C7657 (private module fragment cannot be declared before a module declaration). The workaround `cc.reprocess=true` can only be applied while consuming the `build2` package. Thus, unit tests running on Windows fail for the installed case.
+- To generate a Binary Module Interface (BMI) from {fmt}'s C++ module after installation, the consumer must compile the module interface unit using the same macro configuration as the original library build. These macros are internal to the module and are therefore not exported via `cxx.export.poptions`. Instead, a generated `config.h` header encapsulates the required configuration through preprocessor macros. The module interface unit is patched to include this header immediately after `module;` in the global module fragment, ensuring the correct macros are available during BMI generation.
+- In non-modular compiled builds, `fmt/format-inl.h` acts as a private implementation header for `src/format.cc`. While its installation in this specific configuration is technically unnecessary, we do not explicitly exclude it to reduce complexity.
+- C++ module support in GCC versions prior to 16 is incomplete and unreliable for this library. As a result, such configurations are considered unsupported and are excluded from CI.
+- On FreeBSD 15 with Clang 19, there is a discrepancy between compiler capabilities and system libraries. Although `__cpp_lib_modules` is defined (indicating that libc++ has module support), the base system does not ship the required module source or metadata files. Consequently, `import std;` is not functional in this environment which is reflected in the generated `config.h`.
+- Upstream unit tests currently only support C++20 and fail when compiled with newer language standards. Therefore, the `fmt-tests` package is explicitly restricted to `cxx.std = 20`.
+- Currently, unit tests are only run when the library headers are available and not when `config.fmt.module_only=true`. The unit tests use standard header includes rather than module imports.
+- A known [issue in MSVC](https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183) prevents correct processing of {fmt}'s C++ module, producing error C7657 (“private module fragment cannot be declared before a module declaration”). The workaround (`cc.reprocess=true`) is only applicable when consuming the package directly via `build2`. As a result, unit tests fail on Windows when using the installed package.
 
 ## Contributing
 Contributions are welcome and greatly appreciated!
