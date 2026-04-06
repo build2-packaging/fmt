@@ -27,18 +27,7 @@ Note also that `lib{fmt}` provides `build2` metadata that can be extracted with 
 If `$fmt.has_header == true`, {fmt}'s headers can be included as follows:
 
 ```c++
-#include <fmt/base.h>     // Base API
-#include <fmt/format.h>   // Formatting Functions and Locale Support
-#include <fmt/ranges.h>   // Formatting of Ranges and Tuples
-#include <fmt/chrono.h>   // Date and Time Formatting
-#include <fmt/std.h>      // Formatting for Standard Library Types
-#include <fmt/compile.h>  // Format String Compilation
-#include <fmt/color.h>    // Terminal Colors and Text Styles
-#include <fmt/os.h>       // System APIs
-#include <fmt/ostream.h>  // `std::ostream` Support
-#include <fmt/args.h>     // Dynamic Argument Lists
-#include <fmt/printf.h>   // Safe `printf`
-#include <fmt/xchar.h>    // Optional `wchar_t` Support
+#include <fmt/format.h>
 ```
 
 If `$fmt.has_module == true`, {fmt}'s C++ module can imported via:
