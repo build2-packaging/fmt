@@ -1,5 +1,5 @@
-import pkgs = {*/ -*-tests/ -upstream/}
-import tests = {*-tests/}
+import pkgs = fmt/
+import tests = fmt-tests/
 
 ./: $pkgs
 ./: $tests: install = false
