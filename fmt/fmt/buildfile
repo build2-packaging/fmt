@@ -46,10 +46,18 @@ src/
   # Place the header include immediately after 'module;' to ensure all
   # relevant macros are available before any other macro preprocessing.
   #
+  # Also, disable the private module fragment as it is not supported on
+  # recent compiler versions. This change should probably be removed for
+  # future package versions because upstream already fixed this.
+  # See: https://github.com/fmtlib/fmt/pull/4718
+  #
   mxx{fmt}: file{fmt.cc}
   {{
     diag patch $< -> $>
-    sed -e 's/^module;/module;\n#include "config.h"/' $path($<) >$path($>)
+    sed \
+      -e 's%^module;%module;\n#include "config.h"%' \
+      -e 's%^module :private;%// Do not use private module fragment.\n// See: https://github.com/fmtlib/fmt/pull/4718\n// module :private;%' \
+      $path($<) >$path($>)
   }}
 
   # The config header needs to define all macros that were required
