@@ -1,18 +1,21 @@
+# Configuration Variables
+
+# Disable access to `lib{fmt}`'s headers to encapsulate
+# all entities in {fmt}'s C++ module with module linkage.
+#
+config [bool] config.fmt.module_only ?= false
+
+# C++ Configuration
+#
 cxx.std = latest
 
 using cxx
 
 hxx{*}: extension = h
+ixx{*}: extension = cc
 cxx{*}: extension = cc
 mxx{*}: extension = cc
 
 # The test target for cross-testing (running tests under Wine, etc).
 #
 test.target = $cxx.target
-
-
-##############################
-# Project-specific options:
-
-config [bool]    config.fmt.enable_import_std ?= false
-config [bool]    config.fmt.modules_only ?= false

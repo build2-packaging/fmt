@@ -1,0 +1,4 @@
+# Redirect stdout to stderr (1>&2) and let stderr through (2>|).
+# Cleanup anything the test might create, recursively (&***).
+#
+$* 1>&2 2>| &***

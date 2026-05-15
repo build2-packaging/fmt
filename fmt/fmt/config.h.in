@@ -1,0 +1,14 @@
+#if __has_include(<version>)
+#  include <version>
+#endif
+
+// Use `import std;` if the compiler supports it.
+#if defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
+#  if !defined(__FreeBSD__)
+#    define FMT_IMPORT_STD
+#  endif
+#endif
+
+#ifdef FMT_SHARED
+#  define FMT_LIB_EXPORT
+#endif

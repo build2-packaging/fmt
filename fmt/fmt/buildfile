@@ -1,70 +1,106 @@
-./ : lib{fmt}
+# Using C++ modules, {fmt} incorporates all headers and sources into its
+# module interface unit. We dynamically retype their target types as
+# implementation fragments (`ixx{}`) to reflect their role as internal
+# module details. While other strategies exist to achieve this, changing
+# the target types provides the clearest communication of intent.
 
-lib{fmt}: include/hxx{**} hxx{version}
+# Headers:
+# In module-only mode, headers are no longer public interface points;
+# they become internal module details. Retyping to `ixx` enforces this
+# encapsulation and signals that direct header access is discouraged.
+#
+# Note:
+# In non-modular, compiled builds, `fmt/format-inl.h` acts as a private
+# implementation header for `src/format.cc`. While its installation is
+# technically unnecessary in this specific configuration, we do not
+# explicitly exclude it to avoid complicating the installation logic.
+#
+hdr_type = ($config.fmt.module_only ? ixx : hxx)
+lib{fmt}: include/$hdr_type{**.h}
 
-# Automatically build as module if the feature is enabled
-build_fmt_module = $cxx.features.modules
-allow_header_usage = ($build_fmt_module == false || $config.fmt.modules_only == false)
+# Sources:
+# With {fmt}'s module, sources are no longer compiled as translation units.
+# However, they must remain visible to the consumer's compiler to be read and
+# processed during module importation. Using `ixx`, ensures these files are
+# properly installed as source text rather than compiled into object files.
+#
+src_type = ($cxx.features.modules ? ixx : cxx)
+lib{fmt}: src/$src_type{** -fmt}
 
-if($build_fmt_module && $allow_header_usage)
-  info "Building fmt with dual module/header mode enabled"
+# Module
+#
+# To successfully generate a Binary Module Interface (BMI) after installation,
+# the consumer must compile the module interface unit with the same macro
+# configuration used during the library's original build.
+# Since these macros are only required by the module itself, they should not be
+# exported to the consumer's preprocessor scope via 'cxx.export.poptions'.
+# To bridge this gap, we generate a persistent 'config.h' that encapsulates the
+# package configuration. We then patch the module interface unit to include this
+# header within the Global Module Fragment, ensuring the macros are available
+# during BMI generation without leaking into the consumer's translation units.
+#
+lib{fmt}: src/hxx{config} src/mxx{fmt}: include = $cxx.features.modules
 
-# Workaround for MSVC bug: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
-if($build_fmt_module && $cxx.class == 'msvc')
-  cc.reprocess = true
+src/
+{
+  # Place the header include immediately after 'module;' to ensure all
+  # relevant macros are available before any other macro preprocessing.
+  #
+  # Also, disable the private module fragment as it is not supported on
+  # recent compiler versions. This change should probably be removed for
+  # future package versions because upstream already fixed this.
+  # See: https://github.com/fmtlib/fmt/pull/4718
+  #
+  mxx{fmt}: file{fmt.cc}
+  {{
+    diag patch $< -> $>
+    sed \
+      -e 's%^module;%module;\n#include "config.h"%' \
+      -e 's%^module :private;%// Do not use private module fragment.\n// See: https://github.com/fmtlib/fmt/pull/4718\n// module :private;%' \
+      $path($<) >$path($>)
+  }}
 
-lib{fmt}: src/mxx{fmt} : include = ($build_fmt_module) # `fmt` C++ module only
-lib{fmt}: src/cxx{** -fmt} : include = (!$build_fmt_module) # no modules only
+  # The config header needs to define all macros that were required
+  # to compile the module interface unit during the installation.
+  #
+  hxx{config}: ../file{config.h.in}
+  {{
+    diag config $< -> $>
+    cp $path($<) $path($>)
+    if! $config.fmt.module_only
+      echo '#define FMT_ATTACH_TO_GLOBAL_MODULE' >+$path($>)
+    end
+  }}
+}
 
-# Meta data for users
+# Build and Export Options
+#
+cxx.poptions =+ "-I$out_base/src" "-I$src_base/src" "-I$src_base/include"
+
+if! $config.fmt.module_only
+  lib{fmt}: cxx.export.poptions = "-I$src_base/include"
+
+{objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
+libs{fmt}: cxx.export.poptions += -DFMT_SHARED
+
+if ($cxx.class == 'msvc')
+{
+  # Workaround for MSVC Bug
+  # Otherwise, MSVC emits error C7657 (private module fragment cannot
+  # be declared before a module declaration) when processing the module.
+  # See: https://developercommunity.visualstudio.com/t/Separate-preprocessing-with-P-fails-wit/10707183
+  #
+  if $cxx.features.modules
+    cc.reprocess = true
+}
+
+# Metadata
+#
 lib{fmt}:
 {
   export.metadata = 1 fmt
-  fmt.has_header = [bool] $allow_header_usage
-  fmt.has_module = [bool] $build_fmt_module
-}
-
-# Include the generated version header into the distribution (so that we don't
-# pick up an installed one) and don't remove it when cleaning in src (so that
-# clean results in a state identical to distributed).
-#
-hxx{version} : in{version} $src_root/manifest
-{
-  dist  = true
-  clean = ($src_root != $out_root)
-  install = include/fmt
-}
-
-
-# Build options.
-#
-cxx.poptions =+ "-I$src_base/include" "-I$out_root"
-{objs bmis}{*}: cxx.poptions += -DFMT_LIB_EXPORT
-
-# If building fmt module, also enable attaching to the global module in order to allow concurrent #include and import.
-if($build_fmt_module)
-{
-  if($allow_header_usage)
-    # Support mixing consuming as both modules and headers within a single build
-    cxx.poptions =+ -DFMT_ATTACH_TO_GLOBAL_MODULE
-  if($config.fmt.enable_import_std)
-    cxx.poptions =+ -DFMT_IMPORT_STD
-}
-
-# Export options.
-#
-if($allow_header_usage)
-{
-  # Note: these poptions only relevant for header consumption
-  lib{fmt}: cxx.export.poptions = "-I$src_base/include" "-I$out_root"
-
-  if($build_fmt_module)
-  {
-    # For consumer-built BMI compatibility, this must be exported
-    lib{fmt}: cxx.export.poptions += -DFMT_ATTACH_TO_GLOBAL_MODULE
-  }
-
-  libs{fmt}: cxx.export.poptions += -DFMT_SHARED 
+  fmt.has_header = [bool] (!$config.fmt.module_only)
+  fmt.has_module = [bool] $cxx.features.modules
 }
 
 # For pre-releases use the complete version to make sure they cannot be used
@@ -76,14 +112,27 @@ if $version.pre_release
 else
   lib{fmt}: bin.lib.version = @"-$version.major.$version.minor"
 
-# Install into the fmt/ subdirectory of, say, /usr/include/
-# recreating subdirectories.
+# Installation
 #
-include/
+# To support post-installation usage for the C++ modules, we isolate
+# the library's components within a dedicated 'fmtlib/' subdirectory.
+# Headers are installed into 'fmtlib/fmt/' to satisfy {fmt}'s internal
+# inclusion scheme, e.g., #include "fmt/core.h". The module interface unit,
+# its configuration headers, and the implementation sources reside at the
+# 'fmtlib/' root. To ensure the compiler resolves header paths correctly,
+# we point the pkg-config include path to 'include/fmtlib/'.
+#
+if! $config.fmt.module_only
+  lib{fmt}: cxx.pkgconfig.include = include/fmtlib/
+
+include/{hxx ixx}{*}:
 {
-  {hxx ixx txx}{*}:
-  {
-    install         = include/
-    install.subdirs = true
-  }
+  install         = include/fmtlib/
+  install.subdirs = true
+}
+
+src/{hxx mxx ixx}{*}:
+{
+  install         = include/fmtlib/
+  install.subdirs = true
 }
