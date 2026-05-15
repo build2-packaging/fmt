@@ -1,0 +1,8 @@
+: 1
+name: fmt
+version: 12.1.0
+type: lib
+language: c++
+project: fmt
+summary: Formatting C++ library used as alternative to (s)printf and iostreams
+license: MIT

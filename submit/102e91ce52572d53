@@ -1,0 +1,8 @@
+: 1
+name: fmt-tests
+version: 12.1.0
+type: exe
+language: c++
+project: fmt
+summary: Formatting C++ library tests
+license: MIT
